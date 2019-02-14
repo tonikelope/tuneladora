@@ -32,7 +32,7 @@ def parse_ports(args_ports):
 
 cprint(figlet_format("Tuneladora SSH"), "green", attrs=["bold"])
 
-cprint("Tuneladora SSH 1.1\nA SSH port redirector for lazy people (made with love by tonikelope).", attrs=["bold"])
+cprint("Tuneladora SSH 1.2\nA SSH port redirector for lazy people (made with love by tonikelope).", attrs=["bold"])
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=colored("Some examples:\n\n#1")+colored(" tuneladora 'localhost#localhost#8080' user@192.168.1.5", "green")+colored(" Redirects local port 8080 of (local) localhost to remote port 8080 of (remote) localhost on remote machine 192.168.1.5")+colored("\n\n#2")+colored(" tuneladora 8080 user@192.168.1.5", "green")+colored(" Same as #1 (default local/remote address is 'localhost')")+colored("\n\n#3")+colored(" tuneladora '8080:8081' user@192.168.1.5", "green")+colored(" Redirects local ports 8080 to 8081 of (local) localhost to remote ports 8080 to 8081 of (remote) localhost on remote machine 192.168.1.5")+colored("\n\n#4")+colored(" tuneladora '9000->10000' user@192.168.1.5", "green")+colored(" Redirects local port 9000 of (local) localhost to remote port 10000 of (remote) localhost on remote machine 192.168.1.5")+colored("\n\n#5")+colored(" tuneladora '192.168.100.3#localhost#8080,9090+192.168.1.5#9000->9100+10000:10005' user@192.168.1.5", "green")+colored(" Redirects local ports 8080 and 9090 of (local) 192.168.100.3 to remote ports 8080 and 9090 of (remote) localhost AND redirects local port 9000 of (local) localhost to remote port 9100 of (remote) 192.168.1.5 AND redirects local ports 10000 to 10005 of (local) localhost to remote ports 10000 to 10005 of (remote) localhost ON remote machine 192.168.1.5"))
 
@@ -85,4 +85,4 @@ if len(parsed_ports) > 0:
 
 	os.system(ssh_command_line)
 else:
-	cprint("ERROR: nothing to do", "red", attrs=["bold"])
+	cprint("ERROR: nothing to do or bad syntax", "red", attrs=["bold"])
