@@ -8,7 +8,7 @@ import re
 from pyfiglet import figlet_format
 from termcolor import cprint, colored
 
-VERSION = "1.5"
+VERSION = "1.6"
 
 def parse_ports(args_ports):
 	ports = []
@@ -63,7 +63,7 @@ parser.add_argument("ports", help="[[local_address#]remote_address#]<lport[->rpo
 
 parser.add_argument("destination", help="Destination host.")
 
-parser.add_argument('--proxy', help="ssh -o ProxyCommand='THIS STUFF'")
+parser.add_argument('proxy', nargs='?', default=None, help="ssh -o ProxyCommand='THIS STUFF' (OPTIONAL)")
 
 args = parser.parse_args()
 
