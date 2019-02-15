@@ -1,0 +1,11 @@
+_tuneladora()
+{
+    local cur
+    cur="${COMP_WORDS[COMP_CWORD]}"
+
+    if [[ ${COMP_CWORD} == 2 ]] ; then
+        _known_hosts_real -a "${cur}"
+    fi
+
+}
+complete -F _tuneladora tuneladora
