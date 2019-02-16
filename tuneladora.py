@@ -8,7 +8,7 @@ import re
 from pyfiglet import figlet_format
 from termcolor import cprint, colored
 
-VERSION = "1.7"
+VERSION = "1.8"
 
 def parse_ports(args_ports):
 	ports = []
@@ -57,11 +57,13 @@ cprint("https://github.com/tonikelope/tuneladora\n")
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=colored("Some examples:\n\n#1")+colored(" tuneladora 'localhost#localhost#8080' user@192.168.1.5", "green")+colored(" Redirects local port 8080 of (local) localhost to remote port 8080 of (remote) localhost on remote machine 192.168.1.5")+colored("\n\n#2")+colored(" tuneladora 8080 user@192.168.1.5", "green")+colored(" Same as #1 (default local/remote address is 'localhost')")+colored("\n\n#3")+colored(" tuneladora '8080:8081' user@192.168.1.5", "green")+colored(" Redirects local ports 8080 to 8081 of (local) localhost to remote ports 8080 to 8081 of (remote) localhost on remote machine 192.168.1.5")+colored("\n\n#4")+colored(" tuneladora '9000->10000' user@192.168.1.5", "green")+colored(" Redirects local port 9000 of (local) localhost to remote port 10000 of (remote) localhost on remote machine 192.168.1.5")+colored("\n\n#5")+colored(" tuneladora '192.168.100.3#localhost#8080,9090+192.168.1.5#9000->9100+10000:10005' user@192.168.1.5", "green")+colored(" Redirects local ports 8080 and 9090 of (local) 192.168.100.3 to remote ports 8080 and 9090 of (remote) localhost AND redirects local port 9000 of (local) localhost to remote port 9100 of (remote) 192.168.1.5 AND redirects local ports 10000 to 10005 of (local) localhost to remote ports 10000 to 10005 of (remote) localhost ON remote machine 192.168.1.5"))
 
-parser.add_argument("ports", help="[[local_address#]remote_address#]<lport[->rport]|port_init:port_end[,lport[->rport]|port_init:port_end[,...]]>[+[[local_address#]remote_address#]<lport[->rport]|port_init:port_end[,lport[->rport]|port_init:port_end[,...]]>[+...]]")
+parser.add_argument("ports", help="[[local_address#]remote_address#]lport[->rport]|port_init:port_end[,lport[->rport]|port_init:port_end[,...]][+[[local_address#]remote_address#]lport[->rport]|port_init:port_end[,lport[->rport]|port_init:port_end[,...]][+...]]")
 
 parser.add_argument("destination", help="[user@]host")
 
-parser.add_argument('proxy', nargs='?', default=None, help="ssh ProxyCommand option")
+parser.add_argument('-r', '--reverse', action='store_true', help="Reverse tunnel")
+
+parser.add_argument('-p', '--proxy', default=None, help="ssh ProxyCommand option")
 
 args = parser.parse_args()
 
@@ -87,11 +89,11 @@ try:
 		for puertos in port_info['ports']:
 
 			if 'lport' in puertos:
-				ssh_command_line = ssh_command_line + " -L "+port_info['laddress']+":"+puertos['lport']+":"+port_info['raddress']+":"+puertos['rport']
+				ssh_command_line = ssh_command_line + (" -R " if args.reverse else " -L ") + port_info['laddress'] + ":" + puertos['lport'] + ":" + port_info['raddress'] + ":" + puertos['rport']
 				tot_open_files = tot_open_files + 1
 			else:
-				for p in range(int(puertos['pinit']), int(puertos['pend'])+1):
-					ssh_command_line = ssh_command_line + " -L "+port_info['laddress']+":"+str(p)+":"+port_info['raddress']+":"+str(p)
+				for p in range(int(puertos['pinit']), int(puertos['pend']) + 1):
+					ssh_command_line = ssh_command_line + (" -R " if args.reverse else " -L ") + port_info['laddress'] + ":" + str(p) + ":" + port_info['raddress'] + ":" + str(p)
 
 				tot_open_files = tot_open_files + int(puertos['pend']) + 1 - int(puertos['pinit'])
 

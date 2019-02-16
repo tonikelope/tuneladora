@@ -2,8 +2,33 @@ _tuneladora()
 {
     local cur     
     cur="${COMP_WORDS[COMP_CWORD]}"
+    offset=0
 
-    if (( "$COMP_CWORD" == 2 )) ; then
+    if [ $(echo ${COMP_WORDS[@]} | grep -o "\-p" | wc -w) -ne 0 ] ; then
+
+    	offset=$(( offset + 2 ))
+
+    fi
+
+    if [ $(echo ${COMP_WORDS[@]} | grep -o "\-\-proxy" | wc -w) -ne 0 ] ; then
+
+    	offset=$(( offset + 2 ))
+
+    fi
+
+    if [ $(echo ${COMP_WORDS[@]} | grep -o "\-r" | wc -w) -ne 0 ] ; then
+
+    	offset=$(( offset + 1 ))
+
+    fi
+
+    if [ $(echo ${COMP_WORDS[@]} | grep -o "\-\-reverse" | wc -w) -ne 0 ] ; then
+
+    	offset=$(( offset + 1 ))
+
+    fi
+
+    if (( "$COMP_CWORD" == 2 + "$offset" )) ; then
         _known_hosts_real -a "${cur}"
     fi
 
