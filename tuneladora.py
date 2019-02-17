@@ -7,8 +7,9 @@ import sys
 import re
 from pyfiglet import figlet_format
 from termcolor import cprint, colored
+import time
 
-VERSION = "1.8"
+VERSION = "1.9"
 
 def parse_ports(args_ports):
 	ports = []
@@ -101,8 +102,19 @@ try:
 		cprint("ERROR: 'ulimit -n' is ["+str(max_open_files)+"]. REDUCE PORTS or INCREASE THE VALUE OF 'ulimit -n'", "red", attrs=["bold"])
 	else:
 		ssh_command_line = ssh_command_line + " " + args.destination
-		cprint(ssh_command_line, "cyan")
-		os.system(ssh_command_line)
+		
+		while True:
+			cprint(ssh_command_line, "cyan")
+
+			os.system(ssh_command_line)
+
+			try:
+				cprint('Tunnel closed. Opening again in 5 seconds... (CTRL + C to abort)', 'yellow')
+				time.sleep(5)
+			except KeyboardInterrupt:
+				cprint('Aborted!', 'yellow')
+				break
+
 
 except Exception as e:
-	cprint("ERROR parsing ports -> "+ str(e), "red", attrs=["bold"])
+	cprint("ERROR: "+ str(e), "red", attrs=["bold"])
