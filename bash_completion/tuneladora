@@ -1,4 +1,4 @@
-tuneladora()
+_tuneladora()
 {
     local cur
     declare -a offset_params=("\-p#2" "\-r#1")
