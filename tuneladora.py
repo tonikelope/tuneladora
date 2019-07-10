@@ -9,7 +9,7 @@ from pyfiglet import figlet_format
 from termcolor import cprint, colored
 import time
 
-VERSION = "1.9"
+VERSION = "1.10"
 
 def parse_ports(args_ports):
 	ports = []
@@ -90,11 +90,17 @@ try:
 		for puertos in port_info['ports']:
 
 			if 'lport' in puertos:
-				ssh_command_line = ssh_command_line + (" -R " if args.reverse else " -L ") + port_info['laddress'] + ":" + puertos['lport'] + ":" + port_info['raddress'] + ":" + puertos['rport']
+				if args.reverse:
+					ssh_command_line = ssh_command_line + " -R " + port_info['raddress'] + ":" + puertos['rport'] + ":" + port_info['laddress'] + ":" + puertos['lport']
+				else:
+					ssh_command_line = ssh_command_line + " -L " + port_info['laddress'] + ":" + puertos['lport'] + ":" + port_info['raddress'] + ":" + puertos['rport']
 				tot_open_files = tot_open_files + 1
 			else:
 				for p in range(int(puertos['pinit']), int(puertos['pend']) + 1):
-					ssh_command_line = ssh_command_line + (" -R " if args.reverse else " -L ") + port_info['laddress'] + ":" + str(p) + ":" + port_info['raddress'] + ":" + str(p)
+					if args.reverse:
+						ssh_command_line = ssh_command_line + " -R " + port_info['raddress'] + ":" + str(p) + ":" + port_info['laddress'] + ":" + str(p) 
+					else:
+						ssh_command_line = ssh_command_line + " -L " + port_info['laddress'] + ":" + str(p) + ":" + port_info['raddress'] + ":" + str(p)
 
 				tot_open_files = tot_open_files + int(puertos['pend']) + 1 - int(puertos['pinit'])
 
