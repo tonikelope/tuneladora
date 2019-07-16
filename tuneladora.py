@@ -9,7 +9,7 @@ from pyfiglet import figlet_format
 from termcolor import cprint, colored
 import time
 
-VERSION = "1.10"
+VERSION = "1.11"
 
 def parse_ports(args_ports):
 	ports = []
@@ -91,6 +91,9 @@ try:
 
 			if 'lport' in puertos:
 				if args.reverse:
+					puerto_remoto = puertos['rport']
+					puertos['rport'] = puertos['lport']
+					puertos['lport'] = puerto_remoto
 					ssh_command_line = ssh_command_line + " -R " + port_info['raddress'] + ":" + puertos['rport'] + ":" + port_info['laddress'] + ":" + puertos['lport']
 				else:
 					ssh_command_line = ssh_command_line + " -L " + port_info['laddress'] + ":" + puertos['lport'] + ":" + port_info['raddress'] + ":" + puertos['rport']
