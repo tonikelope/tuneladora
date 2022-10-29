@@ -9,7 +9,7 @@ from pyfiglet import figlet_format
 from termcolor import cprint, colored
 import time
 
-VERSION = "1.11"
+VERSION = "1.12"
 
 def parse_ports(args_ports):
 	ports = []
@@ -62,6 +62,8 @@ parser.add_argument("ports", help="[[local_address#]remote_address#]lport[->rpor
 
 parser.add_argument("destination", help="[user@]host")
 
+parser.add_argument('-P', '--sshport', default=None, help="Remote ssh port option")
+
 parser.add_argument('-r', '--reverse', action='store_true', help="Reverse tunnel")
 
 parser.add_argument('-p', '--proxy', default=None, help="ssh ProxyCommand option")
@@ -79,6 +81,9 @@ try:
 	tot_open_files = 0
 
 	ssh_command_line = "ssh -N"
+
+	if args.sshport:
+		ssh_command_line=ssh_command_line+" -p "+args.sshport
 
 	if args.proxy:
 		ssh_command_line=ssh_command_line+" -o ProxyCommand='"+args.proxy+"'"
