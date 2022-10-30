@@ -9,7 +9,7 @@ from pyfiglet import figlet_format
 from termcolor import cprint, colored
 import time
 
-VERSION = "1.13"
+VERSION = "1.14"
 
 def parse_ports(args_ports):
 	ports = []
@@ -38,7 +38,10 @@ def parse_ports(args_ports):
 			elif port3.find('->') != -1:
 				ports_split4 = [i.strip() for i in port3.split('->')]
 				if 0 <= int(ports_split4[0]) <= 65535 and 0 <= int(ports_split4[1]) <= 65535:
-					ports_append['ports'].append({'lport': ports_split4[0], 'rport': ports_split4[1]})
+					if args.reverse:
+						ports_append['ports'].append({'lport': ports_split4[1], 'rport': ports_split4[0]})
+					else:
+						ports_append['ports'].append({'lport': ports_split4[0], 'rport': ports_split4[1]})
 				else:
 					raise Exception('Bad port value/s!')
 			elif 0 <= int(port3) <= 65535:
@@ -57,17 +60,19 @@ cprint("Tuneladora SSH "+VERSION+"\nA SSH port redirector for lazy people (made 
 cprint("https://github.com/tonikelope/tuneladora\n")
 
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=
-	colored("Some examples:\n\n#1")+colored(" tuneladora 8080 bob@192.168.1.5", "green")+colored(" Redirects local port 8080 to remote port 8080 on remote machine 192.168.1.5 (remote user 'bob')")+colored("\n\n#2")+colored(" tuneladora '8080->80' alice@192.168.1.5", "green")+colored(" Redirects local port 8080 to remote port 80 on remote machine 192.168.1.5 (remote user 'alice')")+colored("\n\n#3")+colored(" tuneladora '8080->80+8081->81' 192.168.1.5", "green")+colored(" Redirects local port 8080 to remote port 80 and local port 8081 to remote port 81 on remote machine 192.168.1.5 (remote user same as local user)")+colored("\n\n#4")+colored(" tuneladora '8080:8085' 192.168.1.5", "green")+colored(" Same as '8080->8080+8081->8081+8082->8082+8083->8083+8084->8084+8085->8085' 192.168.1.5")+colored("\n\n#5")+colored(" tuneladora '172.26.0.15#localhost#8080' bob@192.168.1.5", "green")+colored(" Redirects local port 8080 of (local interface) 172.26.0.15 to remote port 8080 on remote machine 192.168.1.5 (remote user 'bob')")+colored("\n\n#6")+colored(" tuneladora '172.26.0.15#localhost#8080,9090+192.168.1.5#9000->9100+10000:10005' user@192.168.1.5", "green")+colored(" Redirects [local ports 8080 and 9090 of (local interface) 172.26.0.15 to remote ports 8080 and 9090 AND redirects local port 9000 to remote port 9100 of (remote interface) 192.168.1.5 AND redirects local ports 10000 to 10005 to remote ports 10000 to 10005] ON remote machine 192.168.1.5 (remote user 'bob')"))
+	colored("Some examples:\n\n#1")+colored(" tuneladora 8080 bob@192.168.1.5", "green")+colored(" Redirects local port 8080 to remote port 8080 on remote machine 192.168.1.5 (remote user 'bob')")+colored("\n\n#2")+colored(" tuneladora '8080->80' alice@192.168.1.5", "green")+colored(" Redirects local port 8080 to remote port 80 on remote machine 192.168.1.5 (remote user 'alice')")+colored("\n\n#3")+colored(" tuneladora '8080->80+8081->81' 192.168.1.5", "green")+colored(" Redirects local port 8080 to remote port 80 and local port 8081 to remote port 81 on remote machine 192.168.1.5 (remote user same as local user)")+colored("\n\n#4")+colored(" tuneladora '8080:8085' 192.168.1.5", "green")+colored(" Same as '8080->8080+8081->8081+8082->8082+8083->8083+8084->8084+8085->8085' 192.168.1.5")+colored("\n\n#5")+colored(" tuneladora -r '8080->80' bob@192.168.1.5", "green")+colored(" (REVERSE TUNNEL) Redirects remote port 8080 on remote machine 192.168.1.5 (remote user 'alice') to local port 80")+colored("\n\n#6")+colored(" tuneladora '172.26.0.15#localhost#8080' bob@192.168.1.5", "green")+colored(" Redirects local port 8080 of (local interface) 172.26.0.15 to remote port 8080 on remote machine 192.168.1.5 (remote user 'bob')")+colored("\n\n#7")+colored(" tuneladora '172.26.0.15#localhost#8080,9090+192.168.1.5#9000->9100+10000:10005' user@192.168.1.5", "green")+colored(" Redirects [local ports 8080 and 9090 of (local interface) 172.26.0.15 to remote ports 8080 and 9090 AND redirects local port 9000 to remote port 9100 of (remote interface) 192.168.1.5 AND redirects local ports 10000 to 10005 to remote ports 10000 to 10005] ON remote machine 192.168.1.5 (remote user 'bob')"))
 
 parser.add_argument("ports", help="[[local_address#]remote_address#]lport[->rport]|port_init:port_end[,lport[->rport]|port_init:port_end[,...]][+[[local_address#]remote_address#]lport[->rport]|port_init:port_end[,lport[->rport]|port_init:port_end[,...]][+...]]")
 
 parser.add_argument("destination", help="[user@]host")
 
-parser.add_argument('-p', '--sshport', default=None, help="Remote ssh port option")
-
 parser.add_argument('-r', '--reverse', action='store_true', help="Reverse tunnel")
 
+parser.add_argument('-p', '--sshport', default=None, help="Remote ssh port option")
+
 parser.add_argument('-P', '--proxy', default=None, help="ssh ProxyCommand option")
+
+parser.add_argument('-v', '--verbose', action='store_true', help="ssh verbose option")
 
 args = parser.parse_args()
 
@@ -81,7 +86,10 @@ try:
 
 	tot_open_files = 0
 
-	ssh_command_line = "ssh -N"
+	ssh_command_line = "ssh -N -o ServerAliveInterval=120 -o ServerAliveCountMax=2"
+
+	if args.verbose:
+		ssh_command_line=ssh_command_line+" -v"
 
 	if args.sshport:
 		ssh_command_line=ssh_command_line+" -p "+args.sshport
@@ -97,9 +105,6 @@ try:
 
 			if 'lport' in puertos:
 				if args.reverse:
-					puerto_remoto = puertos['rport']
-					puertos['rport'] = puertos['lport']
-					puertos['lport'] = puerto_remoto
 					ssh_command_line = ssh_command_line + " -R " + port_info['raddress'] + ":" + puertos['rport'] + ":" + port_info['laddress'] + ":" + puertos['lport']
 				else:
 					ssh_command_line = ssh_command_line + " -L " + port_info['laddress'] + ":" + puertos['lport'] + ":" + port_info['raddress'] + ":" + puertos['rport']
@@ -119,7 +124,10 @@ try:
 		ssh_command_line = ssh_command_line + " " + args.destination
 		
 		while True:
-			cprint(ssh_command_line, "cyan")
+			if args.verbose:
+				cprint(ssh_command_line, "cyan")
+
+			cprint("\nTunnel created and running...\n", "green", attrs=["bold"])
 
 			os.system(ssh_command_line)
 
