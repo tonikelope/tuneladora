@@ -2,14 +2,29 @@
 
 import argparse
 import os
+import signal
 import subprocess
+import shlex
 import sys
 import re
 from pyfiglet import figlet_format
 from termcolor import cprint, colored
 import time
 
-VERSION = "1.15"
+VERSION = "1.16"
+
+SSH_PROCESS = None
+
+EXIT = False
+
+def handler(signum, frame):
+	global EXIT, SSH_PROCESS
+
+	EXIT = True
+
+	if SSH_PROCESS:
+		cprint("EXTERNAL SIGTERM!", "red", attrs=["bold"])
+		SSH_PROCESS.send_signal(signum)
 
 def parse_ports(args_ports):
 	ports = []
@@ -56,6 +71,8 @@ def parse_ports(args_ports):
 		ports.append(ports_append)
 
 	return ports
+
+signal.signal(signal.SIGTERM, handler)
 
 cprint(figlet_format("Tuneladora SSH"), "green", attrs=["bold"])
 
@@ -125,21 +142,25 @@ try:
 	else:
 		ssh_command_line = ssh_command_line + " " + args.destination
 		
-		while True:
+		while not EXIT:
 			if args.verbose:
 				cprint(ssh_command_line, "cyan")
 
 			cprint("\nTunnel created and running...\n", "green", attrs=["bold"])
 
-			os.system(ssh_command_line)
-
 			try:
-				cprint('Tunnel closed. Opening again in 5 seconds... (CTRL + C to abort)', 'yellow')
-				time.sleep(5)
-			except KeyboardInterrupt:
-				cprint('Aborted!', 'yellow')
-				break
+				SSH_PROCESS = subprocess.Popen(shlex.split(ssh_command_line))
+				SSH_PROCESS.wait()
+			except:
+				pass
 
+			if not EXIT:
+				try:
+					cprint('Tunnel closed. Opening again in 5 seconds... (CTRL + C to abort)', 'yellow')
+					time.sleep(5)
+				except KeyboardInterrupt:
+					cprint('Auto-open aborted!', 'yellow')
+					break
 
 except Exception as e:
 	cprint("ERROR: "+ str(e), "red", attrs=["bold"])
