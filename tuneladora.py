@@ -11,7 +11,7 @@ from pyfiglet import figlet_format
 from termcolor import cprint, colored
 import time
 
-VERSION = "1.17"
+VERSION = "1.18"
 
 SSH_PROCESS = None
 
@@ -56,7 +56,7 @@ def parse_ports(args_ports):
 				socks = True
 				port3 = port3[1:]
 
-			if port3.find(':') != -1:
+			if port3.find(':') != -1 and not socks:
 				ports_split4 = [i.strip() for i in port3.split(':')]
 				if 0 <= int(ports_split4[0]) <= 65535 and 0 <= int(ports_split4[1]) <= 65535 and int(ports_split4[0]) <= int(ports_split4[1]):
 					ports_append['ports'].append({'pinit': ports_split4[0], 'pend': ports_split4[1], 'reverse':reverse})
@@ -64,7 +64,7 @@ def parse_ports(args_ports):
 					raise Exception('Bad port value/s or range!')
 			elif port3.find('->') != -1:
 				ports_split4 = [i.strip() for i in port3.split('->')]
-				if 0 <= int(ports_split4[0]) <= 65535 and 0 <= int(ports_split4[1]) <= 65535:
+				if not socks and 0 <= int(ports_split4[0]) <= 65535 and 0 <= int(ports_split4[1]) <= 65535:
 					ports_append['ports'].append({'lport': ports_split4[1 if reverse else 0], 'rport': ports_split4[0 if reverse else 1], 'reverse':reverse})
 				else:
 					raise Exception('Bad port value/s!')
